@@ -3,7 +3,7 @@
 Plugin Name: BMO Login
 Plugin URI: http://www.saas7.com/
 Description: Login for BMO
-Version: 1.0.0
+Version: 1.0.1
 Author: H.P.Ang
 Author URI: http://www.saas7.com/
 License: GPL

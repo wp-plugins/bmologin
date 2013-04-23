@@ -7,9 +7,11 @@ Stable tag: 4.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-BMO login provides a login frame with prefixed company code to login to BMO(Business Management Online) software, BMO covers CRM, Inventory, Mailer, SMS, Membership and accounting.
+BMO login form for BMO (Business Management Online) software, CRM Malaysia, Online Inventory System, Bulk Email, Bulk SMS, Online POS System
 
 == Description ==
+
+BMO login provides a login frame with prefixed company code to login to BMO(Business Management Online) software, BMO covers CRM, Inventory, Mailer, SMS, Membership and accounting.
 
 BMO (business management online) application provide cloud based software to manage businesses, customer relations and etc. User can register an account at http://www.bmo.my and login from your web site using this plug in.
 For example, you have register iCRM module from http://bmo.my or http://icrm.com.my, and now you would like your employees to login from your own web site, you can simply implement this login plugin at wordpress and get your user to login via your web site at no time.
@@ -32,6 +34,10 @@ e.g.
 == Screenshots ==
 
 1. Screenshot BMO plugin
+
+== Changelog ==
+= 1.0.1 =
+* Updated some descriptions
 
 = 1.0.0 =
 * Initial release
