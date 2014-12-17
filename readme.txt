@@ -36,6 +36,9 @@ e.g.
 1. Screenshot BMO plugin
 
 == Changelog ==
+= 1.0.2 =
+* Minor function update
+
 = 1.0.1 =
 * Updated some descriptions
 
