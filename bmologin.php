@@ -23,7 +23,11 @@ function bmologin_func($atts, $content){
     echo $_SESSION['error_text'];
   }
   elseif($success = $_GET["bmo_success"])
-    echo '<iframe src="http://login.saas7.com/verify_login_wp.php?rtUsername='.("w".phpbase64encodeFix("bmowebpage".$_SESSION['bmousername'])).'&rpPassword='.("w".phpbase64encodeFix("bmowebpage".$_SESSION['bmopassword'])).'&compcode='.("w".phpbase64encodeFix("bmowebpage".get_option('bmologin_company_code'))).'&wplogin=1" width="'.get_option('bmologin_width').'px" height="'.get_option('bmologin_height').'px"></iframe>';
+    //echo '<iframe src="http://login.saas7.com/verify_login_wp.php?rtUsername='.("w".phpbase64encodeFix("bmowebpage".$_SESSION['bmousername'])).'&rpPassword='.("w".phpbase64encodeFix("bmowebpage".$_SESSION['bmopassword'])).'&compcode='.("w".phpbase64encodeFix("bmowebpage".get_option('bmologin_company_code'))).'&wplogin=1" width="'.get_option('bmologin_width').'px" height="'.get_option('bmologin_height').'px"></iframe>';
+    
+	echo '<script language="javascript">
+			window.location.href="http://login.saas7.com/verify_login_wp.php?rtUsername='.("w".phpbase64encodeFix("bmowebpage".$_SESSION['bmousername'])).'&rpPassword='.("w".phpbase64encodeFix("bmowebpage".$_SESSION['bmopassword'])).'&compcode='.("w".phpbase64encodeFix("bmowebpage".get_option('bmologin_company_code'))).'&wplogin=1";
+		</script>';
   else{// show the form
   //wpcf7();
   ?>
@@ -52,6 +56,7 @@ function bmologin_func($atts, $content){
   
 function handle_bmologin_post() {
 	global $post;
+	//$r = $_SERVER['HTTP_REFERER'];
 	$r = $_SERVER['HTTP_REFERER'];
 	if($nonce = $_POST["bmo_form_nonce"]){
 		if(wp_verify_nonce($nonce, "bmo") ){
