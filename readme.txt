@@ -2,8 +2,8 @@
 Contributors: MobiWeb
 Tags: CRM, Inventory, Mailer, Login, BMO login, iCRM
 Requires at least: 3.0.1
-Tested up to: 3.4
-Stable tag: 4.3
+Tested up to: 4.0.1
+Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,8 +17,7 @@ BMO (business management online) application provide cloud based software to man
 For example, you have register iCRM module from http://bmo.my or http://icrm.com.my, and now you would like your employees to login from your own web site, you can simply implement this login plugin at wordpress and get your user to login via your web site at no time.
 
 1. You can use the plugin with icrm at http://icrm.com.my
-2. Alienmailer at http://alienmailer.com
-3. General BMO at http://bmo.my
+2. General BMO at http://bmo.my
 
 == Installation ==
 Please make sure you have php_curl is enabled.
