@@ -6,186 +6,242 @@ Description: Login for BMO
 Version: 1.0.1
 Author: H.P.Ang
 Author URI: http://www.saas7.com/
-License: GPL
+License: GPL2
 */
+/**
+ * Copyright 2015  Mobiweb  (email : support@mobiweb.com.my)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2, as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
-session_start();
-
-function phpbase64encodeFix($str){
-	return base64_encode(base64_encode(base64_encode($str."mobiweb.com.my")));
-}
-
-function bmologin_func($atts, $content){
-  global $post;
-  $permalink = get_permalink($post->ID);
-  if($error = $_GET["demoform_error"]){
-    echo "Error processing submission<br>";
-    echo $_SESSION['error_text'];
-  }
-  elseif($success = $_GET["bmo_success"])
-    //echo '<iframe src="http://login.saas7.com/verify_login_wp.php?rtUsername='.("w".phpbase64encodeFix("bmowebpage".$_SESSION['bmousername'])).'&rpPassword='.("w".phpbase64encodeFix("bmowebpage".$_SESSION['bmopassword'])).'&compcode='.("w".phpbase64encodeFix("bmowebpage".get_option('bmologin_company_code'))).'&wplogin=1" width="'.get_option('bmologin_width').'px" height="'.get_option('bmologin_height').'px"></iframe>';
-    
-	echo '<script language="javascript">
-			window.location.href="http://login.saas7.com/verify_login_wp.php?rtUsername='.("w".phpbase64encodeFix("bmowebpage".$_SESSION['bmousername'])).'&rpPassword='.("w".phpbase64encodeFix("bmowebpage".$_SESSION['bmopassword'])).'&compcode='.("w".phpbase64encodeFix("bmowebpage".get_option('bmologin_company_code'))).'&wplogin=1";
-		</script>';
-  else{// show the form
-  //wpcf7();
-  ?>
-  <!--<h2>BMO Login</h2>-->
-  <form id="form1" name="form1" method="post" action="<?php echo $permalink; ?>">
-		<p>Username: <input type="text" name="bmousername" id="bmousername" /></p>
-		<p>Password: <input type="password" name="bmopassword" id="bmopassword" /></p>
-		<!--<p>Company Code: <?php //echo get_option('bmologin_company_code'); ?></p>-->
-		<p><div style="padding-left: 10px;"><img src="<?php echo WP_PLUGIN_URL; ?>/bmologin/include/captcha.php" id="captcha" /></div></p>
-		<p>Captcha: <input type="text" name="captcha" id="captcha" /></p>
-  <p><input type="submit" name="button" id="button" value="Submit" /></p>
-
-<?php
-  }
-  wp_nonce_field("bmo","bmo_form_nonce");
-  }
-  
-  
-//  function my_scripts_method() {
-//    wp_deregister_script( 'jquery' );
-//    wp_register_script( 'jquery', 'http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js');
-//    wp_enqueue_script( 'jquery' );
-//}    
-// 
-//add_action('wp_enqueue_scripts', 'my_scripts_method');
-  
-function handle_bmologin_post() {
-	global $post;
-	//$r = $_SERVER['HTTP_REFERER'];
-	$r = $_SERVER['HTTP_REFERER'];
-	if($nonce = $_POST["bmo_form_nonce"]){
-		if(wp_verify_nonce($nonce, "bmo") ){
-			
-			$captcha_valid = 1;
-			$no_error = 1;
-			$_SESSION['error_text'] = "";
-			
-			if($_POST['captcha'] != $_SESSION['captcha']){
-				
-				$captcha_valid = 0;
-				$_SESSION['error_text'] .= "Invalid captcha entered.<br>";
-			}
-			
-			if($captcha_valid && $no_error){
-				
-				$username = $_POST['bmousername'];
-				$password = $_POST['bmopassword'];
-				
-				$tuCurl = curl_init();
-				curl_setopt($tuCurl, CURLOPT_URL, "http://login.saas7.com/verify_login_wp.php");
-				//curl_setopt($tuCurl, CURLOPT_URL, "http://www.isms.com.my/isms_send.php");
-				curl_setopt($tuCurl, CURLOPT_VERBOSE, 1);
-				curl_setopt($tuCurl, CURLOPT_RETURNTRANSFER, 1);
-				curl_setopt($tuCurl, CURLOPT_POST, 1);
-				curl_setopt($tuCurl, CURLOPT_POSTFIELDS, array("rtUsername"=>$username, "rpPassword"=>$password, "compcode"=>get_option('bmologin_company_code')));
-
-				$tuData = curl_exec($tuCurl);
-				
-				curl_close($tuCurl);
-				
-				if($tuData == 1){
-					
-					header("Location: $r&bmo_success=1");
-					$_SESSION['bmousername'] = $username;
-					$_SESSION['bmopassword'] = $password;
-				}
-				else{
-					
-					header("Location: $r&demoform_error=1&$tuData");
-					$_SESSION['error_text'] .= "Invalid username/password/company code entered.<br>";
-				}
-				//header("Location: $r&demoform_success=1&$tuData");
-				exit();
-			}
-			else{
-				header("Location: $r&demoform_error=1");
-				exit();
-			}
-		}
-		else{
-			header("Location: $r&demoform_error=1");
-			exit();
-		}
+ require_once(plugin_dir_path(__FILE__) . 'mobiweb-bmologin-settings.php');
+ 
+ class BMO_Login {
+	protected $settings;
+	
+	/**
+	 * Construct the plugin object
+	 */
+	public function __construct() {
+		$this->load_dependencies();
+		$this->define_hooks();
+		$this->define_admin_hooks();
+		$this->define_shortcodes();
 	}
+	
+	private function load_dependencies() {
+		$this->settings = new Mobiweb_BMO_Login_Settings();
+	}
+	
+	private function define_hooks() {
+		add_action('init', array($this, 'init'));
+	}
+	
+	private function define_admin_hooks() {
+		add_action('admin_init', array($this, 'admin_init'));
+		add_action('admin_menu', array($this, 'add_menu'));
+	}
+	
+	private function define_shortcodes() {
+		add_shortcode('bmologin', array($this, 'bmologin_func'));
+	}
+	
+	/**
+	 * Activate the plugin
+	 */
+	public static function activate() {
+	      // Creates new database field
+	      add_option("bmologin_data", 'Default', '', 'yes');
+	}
+	
+	/**
+	 * Deactivate the plugin
+	 */
+	public static function deactivate() {
+	      // Deletes the database field
+	      delete_option('bmologin_data');
+	}
+	
+	/**
+	 * Hook into WP's init action hook
+	 */
+	public function init() {
+		$this->handle_bmologin_post();
+	}
+	
+	private function handle_bmologin_post() {
+	      if (isset($_POST['bmousername']) && wp_verify_nonce($_POST['bmo_form_nonce'], 'bmo')) {
+		     $bmo_username	= $_POST['bmousername'];
+		     $bmo_password	= $_POST['bmopassword'];
+		     $captcha		= $_POST['captcha'];
+		     
+		     if (empty($bmo_username)) {
+			    // Empty username
+			    $this->bmologin_errors()->add('username_empty', __('Please enter a username', 'mobiweb-bmologin'));
+		     }
+		     
+		     if (empty($bmo_password)) {
+			    // Empty password
+			    $this->bmologin_errors()->add('password_empty', __('Please enter a password', 'mobiweb-bmologin'));
+		     }
+		     
+		     if ($captcha != $_SESSION['captcha']) {
+			    // Invalid captcha
+			    $this->bmologin_errors()->add('captcha_invalid', __('Invalid captcha entered', 'mobiweb-bmologin'));
+		     }
+		     
+		     $errors = $this->bmologin_errors()->get_error_messages();
+
+		     // Only initiate login if there are no errors
+		     if (empty($errors)) {
+			    $tuCurl = curl_init();
+			    curl_setopt($tuCurl, CURLOPT_URL, "http://login.saas7.com/verify_login_wp.php");
+			    curl_setopt($tuCurl, CURLOPT_VERBOSE, 1);
+			    curl_setopt($tuCurl, CURLOPT_RETURNTRANSFER, 1);
+			    curl_setopt($tuCurl, CURLOPT_POST, 1);
+			    curl_setopt($tuCurl, CURLOPT_POSTFIELDS, array("rtUsername"=>$bmo_username, "rpPassword"=>$bmo_password, "compcode"=>get_option('setting_login_form_company_code')));
+
+			    $tuData = curl_exec($tuCurl);
+			    
+			    curl_close($tuCurl);
+			    
+			    if($tuData == 1){
+				   $referer = $_SERVER['HTTP_REFERER'];
+				   header("Location: $referer&bmo_success=1");
+				   $_SESSION['bmousername'] = $bmo_username;
+				   $_SESSION['bmopassword'] = $bmo_password;
+			    }
+			    exit();
+		     }
+	      }
+	}
+	
+	// Used for tracking error messages
+	function bmologin_errors() {
+	      static $wp_error; // Will hold global variable safely
+	      return isset($wp_error) ? $wp_error : ($wp_error = new WP_Error(null, null, null));
+	}
+	
+	// Displays error messages from form submissions
+	function bmologin_show_error_messages() {
+	      if ($codes = $this->bmologin_errors()->get_error_codes()) {
+		     ?>
+		     <div>
+			    <?php
+			    // Loop error codes and display errors
+			    foreach ($codes as $code) {
+				   $message = $this->bmologin_errors()->get_error_message($code);
+				   ?>
+				   <span>
+					  <strong><?php _e('Error', 'mobiweb-bmologin') ?></strong>: <?php echo $message ?>
+				   </span><br />
+				   <?php
+			    }
+			    ?>
+		     </div>
+		     <?php
+	      }
+	}
+	
+	/**
+	 * hook into WP's admin_init action hook
+	 */
+	public function admin_init() {
+		// Set up the settings for this plugin
+		$this->settings->init_settings();
+		// Possibly do additional admin_init tasks
+	}
+	
+	function phpbase64encodeFix($str){
+		return base64_encode(base64_encode(base64_encode($str."mobiweb.com.my")));
+	}
+	
+	function bmologin_func($atts, $content){
+	      if ($_GET['bmo_success']) {
+		     echo '<script language="javascript">
+				      window.location.href="http://login.saas7.com/verify_login_wp.php?rtUsername='.("w".$this->phpbase64encodeFix("bmowebpage".$_SESSION['bmousername'])).'&rpPassword='.("w".$this->phpbase64encodeFix("bmowebpage".$_SESSION['bmopassword'])).'&compcode='.("w".$this->phpbase64encodeFix("bmowebpage".get_option('setting_login_form_company_code'))).'&wplogin=1";
+			      </script>';
+	      } else {// show the form
+		     $this->bmologin_form_fields();
+	      }
+	}
+	
+	/**
+	 * add a menu
+	 */
+	public function add_menu() {
+	      $this->settings->add_menu_settings();
+	}
+	
+       function bmologin_form_fields() {
+	      $permalink = get_permalink($post->ID);
+	      ?>
+	      <h3><?php _e('BMO Login', 'mobiweb-bmologin'); ?></h3>
+	      <?php $this->bmologin_show_error_messages(); ?>
+	      <form id="form1" name="form1" method="post" action="<?php echo $permalink; ?>">
+		     <fieldset>
+			    <p>
+				   <label for="bmousername"><?php _e('Username', 'mobiweb-bmologin'); ?></label>
+				   <input name="bmousername" id="bmousername" type="text" class="required"/>
+			    </p>
+			    <p>
+				   <label for="bmopassword"><?php _e('Password', 'mobiweb-bmologin'); ?></label>
+				   <input name="bmopassword" id="bmopassword" type="password" class="required"/>
+			    </p>
+			    <p>
+				   <div style="padding-left: 10px;"><img src="<?php echo WP_PLUGIN_URL; ?>/bmologin/include/captcha.php" id="captcha" /></div>
+			    </p>
+			    <p>
+				   <label for="captcha"><?php _e('Captcha', 'mobiweb-bmologin'); ?></label>
+				   <input name="captcha" id="captcha" type="text" class="required" />
+			    </p>
+			    <p>
+				   <?php wp_nonce_field('bmo', 'bmo_form_nonce'); ?>
+				   <input name="button" id="button" value="<?php _e('Submit', 'mobiweb-bmologin') ?>" type="submit"/>
+			    </p>
+		     </fieldset>
+	      </form>
+	      <?php
+       }
+ }
+ 
+ // Start session
+if (!session_id()) {
+       session_start();
 }
-
-
-add_action('init','handle_bmologin_post');
-
-add_shortcode('bmologin', 'bmologin_func');
-  /* Runs when plugin is activated */
-register_activation_hook(__FILE__,'bmologin_form_install'); 
-
-/* Runs on plugin deactivation*/
-register_deactivation_hook( __FILE__, 'bmologin_form_remove' );
-
-function bmologin_form_install() {
-/* Creates new database field */
-add_option("bmologin_data", 'Default', '', 'yes');
-}
-
-function bmologin_form_remove() {
-/* Deletes the database field */
-delete_option('bmologin_data');
-}
-
-if ( is_admin() ){
-  /* Call the html code */
-  add_action('admin_menu', 'bmologin_admin_menu');
-}
-
-function bmologin_admin_menu() {
-  add_options_page('BMO Login Setting', 'BMO Login Form', 'administrator', 'bmologin_setting', 'bmologin_html_page');
-  //add_menu_page('BAW Plugin Settings', 'BAW Settings', 'administrator', __FILE__, 'email_sms_html_page',plugins_url('/images/icon.png', __FILE__));
-  
-  add_action( 'admin_init', 'register_bmo_settings' );
-
-}
-
-
-function register_bmo_settings() {
-	//register our settings
-  register_setting( 'bmologin-settings-group', 'bmologin_company_code' );
-  register_setting( 'bmologin-settings-group', 'bmologin_width' );
-  register_setting( 'bmologin-settings-group', 'bmologin_height' );
-}
-
-function bmologin_html_page() {
-?>
-<div>
-<h2>SMS Email Contact form</h2>
-  <form method="post" action="options.php">
-    <?php settings_fields('bmologin-settings-group'); ?>
-    <?php do_settings_fields('bmologin-settings-group','');?>
-<table width="600">
-<!--<tr valign="top">
-  <td width="260" style="text-align:right" scope="row">Notify owner with iSMS</td>
-  <td width="300" style="text-align:left;padding-left:10px"><input name="isms_notification" type="checkbox" id="isms_notification" value="1" <?php //echo get_option('isms_notification')=="1"?"checked":""; ?> /></td>
-</tr>-->
-<tr>
-  <td width="260" style="text-align:right" scope="row">Company Code</td>
-  <td width="300" style="text-align:left;padding-left:10px"><input name="bmologin_company_code" type="text" id="bmologin_company_code" value="<?php echo get_option('bmologin_company_code'); ?>" /></td>
-</tr>
-<tr>
-  <td width="260" style="text-align:right" scope="row">Width(px)</td>
-  <td width="300" style="text-align:left;padding-left:10px"><input name="bmologin_width" type="text" id="bmologin_width" value="<?php echo get_option('bmologin_width'); ?>" /></td>
-</tr>
-<tr>
-  <td width="260" style="text-align:right" scope="row">Height(px)</td>
-  <td width="300" style="text-align:left;padding-left:10px"><input name="bmologin_height" type="text" id="bmologin_height" value="<?php echo get_option('bmologin_height'); ?>" /></td>
-</tr>
-</table> 
-<p>
-<input type="submit" value="<?php _e('Save Changes'); ?>" />
-</p>
-
-</form>
-</div>
-<?php
-}
+ 
+ if (class_exists('BMO_Login')) {
+	// Installation and uninstallation hooks
+	register_activation_hook(__FILE__, array('BMO_Login', 'activate'));
+	register_deactivation_hook(__FILE__, array('BMO_Login', 'deactivate'));
+	
+	
+	
+	// Instantiate the plugin class
+	$bmo_login = new BMO_Login();
+	
+	// Add a link to the settings page onto the plugin page
+	if (isset($bmo_login)) {
+		// Add the settings link to the plugin page
+		function mobiweb_bmologin_settings_link($links) {
+			$settings_link = '<a href="options-general.php?page=bmologin_setting">Settings</a>';
+			array_unshift($links, $settings_link);
+			return $links;
+		}
+		
+		$plugin = plugin_basename(__FILE__);
+		add_filter("plugin_action_links_$plugin", "mobiweb_bmologin_settings_link");
+	}
+ }
 ?>

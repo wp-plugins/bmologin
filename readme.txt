@@ -1,8 +1,8 @@
 === BMO login ===
-Contributors: MobiWeb
+Contributors: mobiweb
 Tags: CRM, Inventory, Mailer, Login, BMO login, iCRM
 Requires at least: 3.0.1
-Tested up to: 3.9
+Tested up to: 4.1.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -26,15 +26,18 @@ This section describes how to install the plugin and get it working.
 
 e.g.
 
-1. Upload `bmologin.php` to the `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Place `[bmologin]` in your posts
+1. Upload `bmologin` to the `/wp-content/plugins/` directory
+1. Activate the plugin through the 'Plugins' menu in WordPress
+1. Place `[bmologin]` in your posts
 
 == Screenshots ==
 
 1. Screenshot BMO plugin
 
 == Changelog ==
+= 1.0.3 =
+* Improved user interface
+
 = 1.0.2 =
 * Minor function update
 
