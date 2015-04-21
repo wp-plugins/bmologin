@@ -37,6 +37,7 @@ e.g.
 == Changelog ==
 = 1.0.3 =
 * Improved user interface
+* Fixed captcha
 
 = 1.0.2 =
 * Minor function update
